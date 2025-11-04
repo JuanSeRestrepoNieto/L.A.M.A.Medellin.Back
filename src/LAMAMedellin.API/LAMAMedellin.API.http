@@ -1,6 +1,54 @@
 @LAMAMedellin.API_HostAddress = http://localhost:5044
 
-GET {{LAMAMedellin.API_HostAddress}}/weatherforecast/
+### Get all members
+GET {{LAMAMedellin.API_HostAddress}}/api/miembros
+Accept: application/json
+
+###
+
+### Get member by ID
+GET {{LAMAMedellin.API_HostAddress}}/api/miembros/1
+Accept: application/json
+
+###
+
+### Create new member
+POST {{LAMAMedellin.API_HostAddress}}/api/miembros
+Content-Type: application/json
+Accept: application/json
+
+{
+  "nombre": "Juan",
+  "apellido": "Pérez",
+  "celular": "3001234567",
+  "correoElectronico": "juan.perez@example.com",
+  "cargo": "Miembro",
+  "rango": "Full Color",
+  "estatus": "Activo"
+}
+
+###
+
+### Update member
+PUT {{LAMAMedellin.API_HostAddress}}/api/miembros/1
+Content-Type: application/json
+Accept: application/json
+
+{
+  "id": 1,
+  "nombre": "Juan",
+  "apellido": "Pérez García",
+  "celular": "3001234567",
+  "correoElectronico": "juan.perez@example.com",
+  "cargo": "Miembro",
+  "rango": "Full Color",
+  "estatus": "Activo"
+}
+
+###
+
+### Delete member
+DELETE {{LAMAMedellin.API_HostAddress}}/api/miembros/1
 Accept: application/json
 
 ###
