@@ -19,8 +19,8 @@ public class ApplicationDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).ValueGeneratedOnAdd();
-            entity.Property(e => e.Nombre).HasMaxLength(100);
-            entity.Property(e => e.Apellido).HasMaxLength(100);
+            entity.Property(e => e.Nombre).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.Apellido).HasMaxLength(100).IsRequired();
             entity.Property(e => e.Celular).HasMaxLength(20);
             entity.Property(e => e.CorreoElectronico).HasMaxLength(100);
             entity.Property(e => e.Direccion).HasMaxLength(255);
@@ -37,6 +37,12 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Moto).HasMaxLength(100);
             entity.Property(e => e.Marca).HasMaxLength(100);
             entity.Property(e => e.PlacaMatricula).HasMaxLength(20);
+            entity.Property(e => e.AnoModelo).HasColumnType("int");
+            entity.Property(e => e.CilindrajeCC).HasColumnType("int");
+            entity.Property(e => e.FechaExpedicionLicenciaConduccion).HasColumnType("date");
+            entity.Property(e => e.FechaExpedicionSOAT).HasColumnType("date");
+            entity.Property(e => e.FechaIngreso).HasColumnType("date");
+            entity.Property(e => e.FechaNacimiento).HasColumnType("date");
         });
     }
 }
