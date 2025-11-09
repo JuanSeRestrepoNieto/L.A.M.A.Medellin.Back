@@ -1,4 +1,4 @@
-namespace Domain.Entities;
+namespace Dominio.Entities;
 
 public class Miembro
 {

@@ -1,0 +1,57 @@
+using Aplicacion.Interfaces.Repositorios;
+using Aplicacion.Interfaces.Servicios;
+using Dominio.Entities;
+
+namespace Aplicacion.Servicios;
+
+public class MiembroService : IMiembroService
+{
+    private readonly IRepositorioMiembro _repositorio;
+
+    public MiembroService(IRepositorioMiembro repositorio)
+    {
+        _repositorio = repositorio;
+    }
+
+    public async Task<IEnumerable<Miembro>> ObtenerTodosAsync()
+    {
+        return await _repositorio.ObtenerTodosAsync();
+    }
+
+    public async Task<Miembro?> ObtenerPorIdAsync(int id)
+    {
+        return await _repositorio.ObtenerPorIdAsync(id);
+    }
+
+    public async Task<Miembro> CrearAsync(Miembro miembro)
+    {
+        await _repositorio.AgregarAsync(miembro);
+        return miembro;
+    }
+
+    public async Task<bool> ActualizarAsync(int id, Miembro miembro)
+    {
+        var miembroExistente = await _repositorio.ObtenerPorIdAsync(id);
+        if (miembroExistente == null)
+        {
+            return false;
+        }
+
+        miembro.Id = id;
+        await _repositorio.ActualizarAsync(miembro);
+        return true;
+    }
+
+    public async Task<bool> EliminarAsync(int id)
+    {
+        var miembro = await _repositorio.ObtenerPorIdAsync(id);
+        if (miembro == null)
+        {
+            return false;
+        }
+
+        await _repositorio.EliminarAsync(id);
+        return true;
+    }
+}
+

@@ -1,53 +1,61 @@
-using Api.Services;
-using Domain.Entities;
+using Api.DTOs;
+using Api.Mappings;
+using Aplicacion.Interfaces.Servicios;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers;
 
-[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class MiembrosController : ControllerBase
 {
-  private readonly IMemberService _memberService;
+  private readonly IMiembroService _miembroService;
 
-  public MiembrosController(IMemberService memberService)
+  public MiembrosController(IMiembroService miembroService)
   {
-    _memberService = memberService;
+    _miembroService = miembroService;
   }
 
   [HttpGet]
-  public ActionResult<IEnumerable<Member>> GetMembers()
+  public async Task<ActionResult<IEnumerable<MiembroDto>>> GetMembers()
   {
-    var members = _memberService.GetAll();
-    return Ok(members);
+    var miembros = await _miembroService.ObtenerTodosAsync();
+    var dtos = miembros.Select(MiembroMapping.ToDto);
+    return Ok(dtos);
   }
 
   [HttpGet("{id:int}")]
-  public ActionResult<Member> GetMember(int id)
+  public async Task<ActionResult<MiembroDto>> GetMember(int id)
   {
-    var member = _memberService.GetById(id);
-    return member is null ? NotFound() : Ok(member);
+    var miembro = await _miembroService.ObtenerPorIdAsync(id);
+    if (miembro is null)
+    {
+      return NotFound();
+    }
+    return Ok(MiembroMapping.ToDto(miembro));
   }
 
   [HttpPost]
-  public ActionResult<Member> CreateMember(Member member)
+  public async Task<ActionResult<MiembroDto>> CreateMember(CreateMiembroDto dto)
   {
-    var created = _memberService.Create(member);
-    return CreatedAtAction(nameof(GetMember), new { id = created.Id }, created);
+    var miembro = MiembroMapping.ToDomain(dto);
+    var created = await _miembroService.CrearAsync(miembro);
+    var createdDto = MiembroMapping.ToDto(created);
+    return CreatedAtAction(nameof(GetMember), new { id = createdDto.Id }, createdDto);
   }
 
   [HttpPut("{id:int}")]
-  public IActionResult UpdateMember(int id, Member member)
+  public async Task<IActionResult> UpdateMember(int id, UpdateMiembroDto dto)
   {
-    var updated = _memberService.Update(id, member);
+    var miembro = MiembroMapping.ToDomain(dto, id);
+    var updated = await _miembroService.ActualizarAsync(id, miembro);
     return updated ? NoContent() : NotFound();
   }
 
   [HttpDelete("{id:int}")]
-  public IActionResult DeleteMember(int id)
+  public async Task<IActionResult> DeleteMember(int id)
   {
-    var deleted = _memberService.Delete(id);
+    var deleted = await _miembroService.EliminarAsync(id);
     return deleted ? NoContent() : NotFound();
   }
 }

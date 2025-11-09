@@ -1,6 +1,10 @@
+using Microsoft.AspNetCore.Mvc;
+
 namespace Api.Controllers;
 
-public class AuthController : BaseController
+[ApiController]
+[Route("api/[controller]")]
+public class AuthController : ControllerBase
 {
   
 }

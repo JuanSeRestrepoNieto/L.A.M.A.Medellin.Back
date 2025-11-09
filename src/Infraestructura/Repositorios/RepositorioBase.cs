@@ -1,32 +1,49 @@
 using Aplicacion.Interfaces.Repositorios;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infraestructura.Repositorios;
 
-public abstract class RepositoryBase<T, TId> : IRepositorioBase<T, TId>
+public abstract class RepositorioBase<T, TId> : IRepositorioBase<T, TId>
   where T : class
 {
-  public async Task<T> ObtenerPorIdAsync(TId id)
+  protected readonly DbContext _context;
+  protected readonly DbSet<T> _dbSet;
+
+  protected RepositorioBase(DbContext context)
   {
-    // Implementación para obtener una entidad por su ID
+    _context = context;
+    _dbSet = context.Set<T>();
   }
 
-  public async Task<IEnumerable<T>> ObtenerTodosAsync()
+  public virtual async Task<T?> ObtenerPorIdAsync(TId id)
   {
-    // Implementación para obtener todas las entidades
+    return await _dbSet.FindAsync(id);
   }
 
-  public async Task AgregarAsync(T entidad)
+  public virtual async Task<IEnumerable<T>> ObtenerTodosAsync()
   {
-    // Implementación para agregar una nueva entidad
+    return await _dbSet.ToListAsync();
   }
 
-  public async Task ActualizarAsync(T entidad)
+  public virtual async Task AgregarAsync(T entidad)
   {
-    // Implementación para actualizar una entidad existente
+    await _dbSet.AddAsync(entidad);
+    await _context.SaveChangesAsync();
   }
 
-  public async Task EliminarAsync(TId id)
+  public virtual async Task ActualizarAsync(T entidad)
   {
-    // Implementación para eliminar una entidad por su ID
+    _dbSet.Update(entidad);
+    await _context.SaveChangesAsync();
+  }
+
+  public virtual async Task EliminarAsync(TId id)
+  {
+    var entidad = await ObtenerPorIdAsync(id);
+    if (entidad != null)
+    {
+      _dbSet.Remove(entidad);
+      await _context.SaveChangesAsync();
+    }
   }
 }

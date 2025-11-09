@@ -1,4 +1,7 @@
+using Infraestructura.DataEntities;
+using Microsoft.EntityFrameworkCore;
 
+namespace Infraestructura.Contexto;
 
 public class MiembrosContexto : DbContext
 {
