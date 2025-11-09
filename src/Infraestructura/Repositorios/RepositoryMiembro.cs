@@ -7,28 +7,28 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infraestructura.Repositorios;
 
-public class RepositoryMiembro : RepositorioBase<Miembro, int>, IRepositorioMiembro
+public class RepositoryMiembro : IRepositorioMiembro
 {
-  private new readonly MiembrosContexto _context;
+  private readonly MiembrosContexto _context;
 
-  public RepositoryMiembro(MiembrosContexto context) : base(context)
+  public RepositoryMiembro(MiembrosContexto context)
   {
     _context = context;
   }
 
-  public override async Task<Miembro?> ObtenerPorIdAsync(int id)
+  public async Task<Miembro?> ObtenerPorIdAsync(int id)
   {
     var dataModel = await _context.Miembros.FindAsync(id);
     return dataModel == null ? null : MiembroMapping.ToDomain(dataModel);
   }
 
-  public override async Task<IEnumerable<Miembro>> ObtenerTodosAsync()
+  public async Task<IEnumerable<Miembro>> ObtenerTodosAsync()
   {
     var dataModels = await _context.Miembros.ToListAsync();
     return dataModels.Select(MiembroMapping.ToDomain);
   }
 
-  public override async Task AgregarAsync(Miembro entidad)
+  public async Task AgregarAsync(Miembro entidad)
   {
     var dataModel = MiembroMapping.ToDataModel(entidad);
     await _context.Miembros.AddAsync(dataModel);
@@ -37,7 +37,7 @@ public class RepositoryMiembro : RepositorioBase<Miembro, int>, IRepositorioMiem
     entidad.Id = dataModel.Id;
   }
 
-  public override async Task ActualizarAsync(Miembro entidad)
+  public async Task ActualizarAsync(Miembro entidad)
   {
     var dataModel = await _context.Miembros.FindAsync(entidad.Id);
     if (dataModel == null)
@@ -76,7 +76,7 @@ public class RepositoryMiembro : RepositorioBase<Miembro, int>, IRepositorioMiem
     await _context.SaveChangesAsync();
   }
 
-  public override async Task EliminarAsync(int id)
+  public async Task EliminarAsync(int id)
   {
     var dataModel = await _context.Miembros.FindAsync(id);
     if (dataModel != null)
