@@ -1,3 +1,4 @@
+using Aplicacion.DTOs;
 using Aplicacion.Interfaces.Repositorios;
 using Dominio.Entities;
 using Infraestructura.Contexto;
@@ -26,6 +27,47 @@ public class RepositoryMiembro : IRepositorioMiembro
   {
     var dataModels = await _context.Miembros.ToListAsync();
     return dataModels.Select(MiembroMapping.ToDomain);
+  }
+
+  public async Task<PaginatedResponseDto<Miembro>> ObtenerConFiltrosAsync(MiembroFiltrosDto filtros)
+  {
+    var query = _context.Miembros.AsQueryable();
+
+    // Aplicar filtros
+    if (!string.IsNullOrWhiteSpace(filtros.Estatus))
+    {
+      query = query.Where(m => m.Estatus == filtros.Estatus);
+    }
+
+    if (!string.IsNullOrWhiteSpace(filtros.Rango))
+    {
+      query = query.Where(m => m.Rango == filtros.Rango);
+    }
+
+    if (!string.IsNullOrWhiteSpace(filtros.Cargo))
+    {
+      query = query.Where(m => m.Cargo != null && m.Cargo.Contains(filtros.Cargo));
+    }
+
+    // Obtener el total antes de paginar
+    var totalCount = await query.CountAsync();
+
+    // Aplicar paginación
+    var skip = (filtros.Page - 1) * filtros.PageSize;
+    var dataModels = await query
+      .Skip(skip)
+      .Take(filtros.PageSize)
+      .ToListAsync();
+
+    var miembros = dataModels.Select(MiembroMapping.ToDomain).ToList();
+
+    return new PaginatedResponseDto<Miembro>
+    {
+      Data = miembros,
+      Page = filtros.Page,
+      PageSize = filtros.PageSize,
+      TotalCount = totalCount
+    };
   }
 
   public async Task AgregarAsync(Miembro entidad)

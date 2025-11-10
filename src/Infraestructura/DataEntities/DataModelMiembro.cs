@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Infraestructura.DataEntities;
 
-[Table("TB_MIEMBROS")]
+[Table("Miembros")]
 public class DataModelMiembro
 {
   [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]

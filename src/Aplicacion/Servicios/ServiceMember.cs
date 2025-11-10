@@ -1,3 +1,4 @@
+using Aplicacion.DTOs;
 using Aplicacion.Interfaces.Repositorios;
 using Aplicacion.Interfaces.Servicios;
 using Dominio.Entities;
@@ -16,6 +17,11 @@ public class MiembroService : IMiembroService
     public async Task<IEnumerable<Miembro>> ObtenerTodosAsync()
     {
         return await _repositorio.ObtenerTodosAsync();
+    }
+
+    public async Task<PaginatedResponseDto<Miembro>> ObtenerConFiltrosAsync(MiembroFiltrosDto filtros)
+    {
+        return await _repositorio.ObtenerConFiltrosAsync(filtros);
     }
 
     public async Task<Miembro?> ObtenerPorIdAsync(int id)

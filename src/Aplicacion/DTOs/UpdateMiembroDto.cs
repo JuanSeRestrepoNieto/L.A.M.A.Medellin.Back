@@ -1,14 +1,10 @@
-using System.ComponentModel.DataAnnotations;
+namespace Aplicacion.DTOs;
 
-namespace Api.DTOs;
-
-public class CreateMiembroDto
+public class UpdateMiembroDto
 {
-    [Required]
     public string? Nombre { get; set; }
     public string? Apellido { get; set; }
     public string? Celular { get; set; }
-    [EmailAddress]
     public string? CorreoElectronico { get; set; }
     public DateTime? FechaIngreso { get; set; }
     public string? Direccion { get; set; }
@@ -32,4 +28,6 @@ public class CreateMiembroDto
     public DateTime? FechaExpedicionLicenciaConduccion { get; set; }
     public DateTime? FechaExpedicionSOAT { get; set; }
 }
+
+
 

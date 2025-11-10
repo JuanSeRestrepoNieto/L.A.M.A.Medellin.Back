@@ -1,5 +1,5 @@
-using Api.DTOs;
 using Api.Mappings;
+using Aplicacion.DTOs;
 using Aplicacion.Interfaces.Servicios;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,11 +17,30 @@ public class MiembrosController : ControllerBase
   }
 
   [HttpGet]
-  public async Task<ActionResult<IEnumerable<MiembroDto>>> GetMembers()
+  public async Task<ActionResult<PaginatedResponseDto<MiembroDto>>> GetMembers([FromQuery] MiembroFiltrosDto? filtros = null)
   {
-    var miembros = await _miembroService.ObtenerTodosAsync();
-    var dtos = miembros.Select(MiembroMapping.ToDto);
-    return Ok(dtos);
+    // Si no se proporcionan filtros, usar valores por defecto
+    var filtrosQuery = filtros ?? new MiembroFiltrosDto();
+    
+    // Validar el modelo
+    if (!ModelState.IsValid)
+    {
+      return BadRequest(ModelState);
+    }
+    
+    // Obtener miembros con filtros y paginación
+    var resultado = await _miembroService.ObtenerConFiltrosAsync(filtrosQuery);
+    
+    // Mapear los datos de Miembro a MiembroDto
+    var respuesta = new PaginatedResponseDto<MiembroDto>
+    {
+        Data = resultado.Data.Select(MiembroMapping.ToDto),
+        Page = resultado.Page,
+        PageSize = resultado.PageSize,
+        TotalCount = resultado.TotalCount
+    };
+    
+    return Ok(respuesta);
   }
 
   [HttpGet("{id:int}")]

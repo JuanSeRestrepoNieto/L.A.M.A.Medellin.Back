@@ -1,4 +1,4 @@
-using Api.DTOs;
+using Aplicacion.DTOs;
 using Dominio.Entities;
 
 namespace Api.Mappings;
@@ -108,5 +108,6 @@ public static class MiembroMapping
             FechaExpedicionSOAT = dto.FechaExpedicionSOAT
         };
     }
+
 }
 
