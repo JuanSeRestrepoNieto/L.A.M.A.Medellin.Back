@@ -1,5 +1,7 @@
+using Api.DTOs;
 using Api.Mappings;
 using Aplicacion.DTOs;
+using Aplicacion.Excepciones;
 using Aplicacion.Interfaces.Servicios;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,16 +19,10 @@ public class MiembrosController : ControllerBase
   }
 
   [HttpGet]
-  public async Task<ActionResult<PaginatedResponseDto<MiembroDto>>> GetMembers([FromQuery] MiembroFiltrosDto? filtros = null)
+  public async Task<ActionResult<ApiResponse<PaginatedResponseDto<MiembroDto>>>> GetMembers([FromQuery] MiembroFiltrosDto? filtros = null)
   {
     // Si no se proporcionan filtros, usar valores por defecto
     var filtrosQuery = filtros ?? new MiembroFiltrosDto();
-    
-    // Validar el modelo
-    if (!ModelState.IsValid)
-    {
-      return BadRequest(ModelState);
-    }
     
     // Obtener miembros con filtros y paginación
     var resultado = await _miembroService.ObtenerConFiltrosAsync(filtrosQuery);
@@ -40,41 +36,75 @@ public class MiembrosController : ControllerBase
         TotalCount = resultado.TotalCount
     };
     
-    return Ok(respuesta);
+    var apiResponse = ApiResponse<PaginatedResponseDto<MiembroDto>>.SuccessResponse(
+        respuesta, 
+        "Miembros obtenidos exitosamente"
+    );
+    apiResponse.TraceId = HttpContext.TraceIdentifier;
+    
+    return Ok(apiResponse);
   }
 
   [HttpGet("{id:int}")]
-  public async Task<ActionResult<MiembroDto>> GetMember(int id)
+  public async Task<ActionResult<ApiResponse<MiembroDto>>> GetMember(int id)
   {
     var miembro = await _miembroService.ObtenerPorIdAsync(id);
     if (miembro is null)
     {
-      return NotFound();
+      throw new NotFoundException("Miembro", id);
     }
-    return Ok(MiembroMapping.ToDto(miembro));
+    
+    var apiResponse = ApiResponse<MiembroDto>.SuccessResponse(
+        MiembroMapping.ToDto(miembro),
+        "Miembro obtenido exitosamente"
+    );
+    apiResponse.TraceId = HttpContext.TraceIdentifier;
+    
+    return Ok(apiResponse);
   }
 
   [HttpPost]
-  public async Task<ActionResult<MiembroDto>> CreateMember(CreateMiembroDto dto)
+  public async Task<ActionResult<ApiResponse<MiembroDto>>> CreateMember(CreateMiembroDto dto)
   {
     var miembro = MiembroMapping.ToDomain(dto);
     var created = await _miembroService.CrearAsync(miembro);
     var createdDto = MiembroMapping.ToDto(created);
-    return CreatedAtAction(nameof(GetMember), new { id = createdDto.Id }, createdDto);
+    
+    var apiResponse = ApiResponse<MiembroDto>.SuccessResponse(
+        createdDto,
+        "Miembro creado exitosamente"
+    );
+    apiResponse.TraceId = HttpContext.TraceIdentifier;
+    
+    return CreatedAtAction(nameof(GetMember), new { id = createdDto.Id }, apiResponse);
   }
 
   [HttpPut("{id:int}")]
-  public async Task<IActionResult> UpdateMember(int id, UpdateMiembroDto dto)
+  public async Task<ActionResult<ApiResponse<object>>> UpdateMember(int id, UpdateMiembroDto dto)
   {
     var miembro = MiembroMapping.ToDomain(dto, id);
-    var updated = await _miembroService.ActualizarAsync(id, miembro);
-    return updated ? NoContent() : NotFound();
+    await _miembroService.ActualizarAsync(id, miembro);
+    
+    var apiResponse = ApiResponse<object>.SuccessResponse(
+        null,
+        "Miembro actualizado exitosamente"
+    );
+    apiResponse.TraceId = HttpContext.TraceIdentifier;
+    
+    return Ok(apiResponse);
   }
 
   [HttpDelete("{id:int}")]
-  public async Task<IActionResult> DeleteMember(int id)
+  public async Task<ActionResult<ApiResponse<object>>> DeleteMember(int id)
   {
-    var deleted = await _miembroService.EliminarAsync(id);
-    return deleted ? NoContent() : NotFound();
+    await _miembroService.EliminarAsync(id);
+    
+    var apiResponse = ApiResponse<object>.SuccessResponse(
+        null,
+        "Miembro eliminado exitosamente"
+    );
+    apiResponse.TraceId = HttpContext.TraceIdentifier;
+    
+    return Ok(apiResponse);
   }
 }

@@ -1,4 +1,5 @@
 using Aplicacion.DTOs;
+using Aplicacion.Excepciones;
 using Aplicacion.Interfaces.Repositorios;
 using Aplicacion.Interfaces.Servicios;
 using Dominio.Entities;
@@ -31,6 +32,8 @@ public class MiembroService : IMiembroService
 
     public async Task<Miembro> CrearAsync(Miembro miembro)
     {
+        // Las excepciones de base de datos (DbUpdateException, etc.) se propagan
+        // al middleware que las maneja apropiadamente
         await _repositorio.AgregarAsync(miembro);
         return miembro;
     }
@@ -40,7 +43,7 @@ public class MiembroService : IMiembroService
         var miembroExistente = await _repositorio.ObtenerPorIdAsync(id);
         if (miembroExistente == null)
         {
-            return false;
+            throw new NotFoundException("Miembro", id);
         }
 
         miembro.Id = id;
@@ -53,7 +56,7 @@ public class MiembroService : IMiembroService
         var miembro = await _repositorio.ObtenerPorIdAsync(id);
         if (miembro == null)
         {
-            return false;
+            throw new NotFoundException("Miembro", id);
         }
 
         await _repositorio.EliminarAsync(id);

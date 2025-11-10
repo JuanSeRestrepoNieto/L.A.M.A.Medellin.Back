@@ -1,6 +1,7 @@
 using Aplicacion.Interfaces.Repositorios;
 using Aplicacion.Interfaces.Servicios;
 using Aplicacion.Servicios;
+using Api.Middleware;
 using Infraestructura.Contexto;
 using Infraestructura.Repositorios;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +9,11 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers(options =>
+{
+    // Agregar filtro de validación del modelo
+    options.Filters.Add<Api.Filters.ModelValidationFilter>();
+});
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -26,6 +31,9 @@ builder.Services.AddScoped<IMiembroService, MiembroService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+// IMPORTANTE: El middleware de manejo de errores debe ir al principio del pipeline
+app.UseMiddleware<ErrorHandlingMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
