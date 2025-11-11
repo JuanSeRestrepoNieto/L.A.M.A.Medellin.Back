@@ -31,7 +31,7 @@ public class RepositoryMiembro : IRepositorioMiembro
 
   public async Task<PaginatedResponseDto<Miembro>> ObtenerConFiltrosAsync(MiembroFiltrosDto filtros)
   {
-    var query = _context.Miembros.AsQueryable();
+    IQueryable<DataModelMiembro> query = _context.Miembros.AsQueryable();
 
     // Aplicar filtros
     if (!string.IsNullOrWhiteSpace(filtros.Estatus))
@@ -50,16 +50,16 @@ public class RepositoryMiembro : IRepositorioMiembro
     }
 
     // Obtener el total antes de paginar
-    var totalCount = await query.CountAsync();
+    int totalCount = await query.CountAsync();
 
     // Aplicar paginación
-    var skip = (filtros.Page - 1) * filtros.PageSize;
-    var dataModels = await query
+    int skip = (filtros.Page - 1) * filtros.PageSize;
+    List<DataModelMiembro> dataModels = await query
       .Skip(skip)
       .Take(filtros.PageSize)
       .ToListAsync();
 
-    var miembros = dataModels.Select(MiembroMapping.ToDomain).ToList();
+    List<Miembro> miembros = dataModels.Select(MiembroMapping.ToDomain).ToList();
 
     return new PaginatedResponseDto<Miembro>
     {
@@ -72,7 +72,7 @@ public class RepositoryMiembro : IRepositorioMiembro
 
   public async Task AgregarAsync(Miembro entidad)
   {
-    var dataModel = MiembroMapping.ToDataModel(entidad);
+    DataModelMiembro dataModel = MiembroMapping.ToDataModel(entidad);
     await _context.Miembros.AddAsync(dataModel);
     await _context.SaveChangesAsync();
     // Actualizar el ID de la entidad de dominio con el ID generado

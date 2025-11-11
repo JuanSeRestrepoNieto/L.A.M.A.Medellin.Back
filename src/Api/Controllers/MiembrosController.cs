@@ -3,6 +3,7 @@ using Api.Mappings;
 using Aplicacion.DTOs;
 using Aplicacion.Excepciones;
 using Aplicacion.Interfaces.Servicios;
+using Dominio.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers;
@@ -22,26 +23,26 @@ public class MiembrosController : ControllerBase
   public async Task<ActionResult<ApiResponse<PaginatedResponseDto<MiembroDto>>>> GetMembers([FromQuery] MiembroFiltrosDto? filtros = null)
   {
     // Si no se proporcionan filtros, usar valores por defecto
-    var filtrosQuery = filtros ?? new MiembroFiltrosDto();
-    
+    MiembroFiltrosDto filtrosQuery = filtros ?? new MiembroFiltrosDto();
+
     // Obtener miembros con filtros y paginación
-    var resultado = await _miembroService.ObtenerConFiltrosAsync(filtrosQuery);
-    
+    PaginatedResponseDto<Miembro> resultado = await _miembroService.ObtenerConFiltrosAsync(filtrosQuery);
+
     // Mapear los datos de Miembro a MiembroDto
     var respuesta = new PaginatedResponseDto<MiembroDto>
     {
-        Data = resultado.Data.Select(MiembroMapping.ToDto),
-        Page = resultado.Page,
-        PageSize = resultado.PageSize,
-        TotalCount = resultado.TotalCount
+      Data = resultado.Data.Select(MiembroMapping.ToDto),
+      Page = resultado.Page,
+      PageSize = resultado.PageSize,
+      TotalCount = resultado.TotalCount
     };
-    
+
     var apiResponse = ApiResponse<PaginatedResponseDto<MiembroDto>>.SuccessResponse(
-        respuesta, 
+        respuesta,
         "Miembros obtenidos exitosamente"
     );
     apiResponse.TraceId = HttpContext.TraceIdentifier;
-    
+
     return Ok(apiResponse);
   }
 
@@ -53,13 +54,13 @@ public class MiembrosController : ControllerBase
     {
       throw new NotFoundException("Miembro", id);
     }
-    
+
     var apiResponse = ApiResponse<MiembroDto>.SuccessResponse(
         MiembroMapping.ToDto(miembro),
         "Miembro obtenido exitosamente"
     );
     apiResponse.TraceId = HttpContext.TraceIdentifier;
-    
+
     return Ok(apiResponse);
   }
 
@@ -69,13 +70,13 @@ public class MiembrosController : ControllerBase
     var miembro = MiembroMapping.ToDomain(dto);
     var created = await _miembroService.CrearAsync(miembro);
     var createdDto = MiembroMapping.ToDto(created);
-    
+
     var apiResponse = ApiResponse<MiembroDto>.SuccessResponse(
         createdDto,
         "Miembro creado exitosamente"
     );
     apiResponse.TraceId = HttpContext.TraceIdentifier;
-    
+
     return CreatedAtAction(nameof(GetMember), new { id = createdDto.Id }, apiResponse);
   }
 
@@ -84,13 +85,13 @@ public class MiembrosController : ControllerBase
   {
     var miembro = MiembroMapping.ToDomain(dto, id);
     await _miembroService.ActualizarAsync(id, miembro);
-    
+
     var apiResponse = ApiResponse<object>.SuccessResponse(
         null,
         "Miembro actualizado exitosamente"
     );
     apiResponse.TraceId = HttpContext.TraceIdentifier;
-    
+
     return Ok(apiResponse);
   }
 
@@ -98,13 +99,13 @@ public class MiembrosController : ControllerBase
   public async Task<ActionResult<ApiResponse<object>>> DeleteMember(int id)
   {
     await _miembroService.EliminarAsync(id);
-    
+
     var apiResponse = ApiResponse<object>.SuccessResponse(
         null,
         "Miembro eliminado exitosamente"
     );
     apiResponse.TraceId = HttpContext.TraceIdentifier;
-    
+
     return Ok(apiResponse);
   }
 }

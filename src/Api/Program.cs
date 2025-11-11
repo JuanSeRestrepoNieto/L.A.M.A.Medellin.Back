@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+const string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+
 // Add services to the container.
 builder.Services.AddControllers(options =>
 {
@@ -28,6 +30,14 @@ builder.Services.AddScoped<IRepositorioMiembro, RepositoryMiembro>();
 // Registrar servicios de aplicación
 builder.Services.AddScoped<IMiembroService, MiembroService>();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: MyAllowSpecificOrigins, policy =>
+    {
+        policy.WithOrigins("http://localhost:5173").AllowAnyHeader().AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -39,6 +49,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseCors(MyAllowSpecificOrigins);
 
 app.UseHttpsRedirection();
 
