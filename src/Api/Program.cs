@@ -7,6 +7,9 @@ using Infraestructura.Repositorios;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Identity.Web;
+using Microsoft.OpenApi.Models;
+using System.Reflection;
+using System.Linq;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,7 +23,55 @@ builder.Services.AddControllers(options =>
 });
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+builder.Services.AddSwaggerGen(options =>
+{
+    var scopes = builder.Configuration
+        .GetSection("Authentication:Scopes")
+        .Get<Dictionary<string, string>>();
+    if (scopes == null || scopes.Count == 0)
+    {
+        throw new InvalidOperationException("Authentication:Scopes configuration is missing or empty.");
+    }
+    var authorizationUrl = builder.Configuration.GetValue<string>("Authentication:AuthorizationUrl")
+        ?? throw new ArgumentNullException("Authentication:AuthorizationUrl");
+    var tokenUrl = builder.Configuration.GetValue<string>("Authentication:TokenUrl")
+        ?? throw new ArgumentNullException("Authentication:TokenUrl");
+
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Version = "v1",
+        Title = "L.A.M.A API",
+        Description = "API created to handle the backend tasks of the L.A.M.A "
+    });
+    options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
+    {
+        Description = "OAuth2.0 Auth Code with PKCE",
+        Name = "oauth2",
+        Type = SecuritySchemeType.OAuth2,
+        Flows = new OpenApiOAuthFlows
+        {
+            AuthorizationCode = new OpenApiOAuthFlow
+            {
+                AuthorizationUrl = new Uri(authorizationUrl),
+                TokenUrl = new Uri(tokenUrl),
+                Scopes = scopes
+            }
+        }
+    });
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "oauth2" }
+            },
+            scopes.Keys.ToArray()
+        }
+    });
+    var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+});
 
 // Configurar Entity Framework
 builder.Services.AddDbContext<MiembrosContexto>(options =>
@@ -43,14 +94,14 @@ builder.Services.AddCors(options =>
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
   .AddMicrosoftIdentityWebApi(op =>
   {
-    builder.Configuration.Bind("AzureAdB2C", op);
-    op.TokenValidationParameters.NameClaimType = "name";
+      builder.Configuration.Bind("AzureAdB2C", op);
+      op.TokenValidationParameters.NameClaimType = "name";
   },
   op =>
   {
-    op.Instance = builder.Configuration.GetValue<string>("AzureAdB2C:Instance") ?? throw new ArgumentNullException("AzureAdB2C:Instance");
-    op.TenantId = builder.Configuration.GetValue<string>("AzureAdB2C:TenantId") ?? throw new ArgumentNullException("AzureAdB2C:TenantId");
-    op.ClientId = builder.Configuration.GetValue<string>("AzureAdB2C:ClientId") ?? throw new ArgumentNullException("AzureAdB2C:ClientId");
+      op.Instance = builder.Configuration.GetValue<string>("AzureAdB2C:Instance") ?? throw new ArgumentNullException("AzureAdB2C:Instance");
+      op.TenantId = builder.Configuration.GetValue<string>("AzureAdB2C:TenantId") ?? throw new ArgumentNullException("AzureAdB2C:TenantId");
+      op.ClientId = builder.Configuration.GetValue<string>("AzureAdB2C:ClientId") ?? throw new ArgumentNullException("AzureAdB2C:ClientId");
   });
 
 var app = builder.Build();
@@ -62,13 +113,29 @@ app.UseMiddleware<ErrorHandlingMiddleware>();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "L.A.M.A API v1");
+        var clientId = builder.Configuration.GetValue<string>("AzureAdB2C:ClientId")
+            ?? throw new ArgumentNullException("AzureAdB2C:ClientId");
+        var scopes = builder.Configuration
+            .GetSection("Authentication:Scopes")
+            .Get<Dictionary<string, string>>();
+        if (scopes == null || scopes.Count == 0)
+        {
+            throw new InvalidOperationException("Authentication:Scopes configuration is missing or empty.");
+        }
+        options.OAuthClientId(clientId);
+        options.OAuthUsePkce();
+        options.OAuthScopes(scopes.Keys.ToArray());
+    });
 }
 
 app.UseCors(MyAllowSpecificOrigins);
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
