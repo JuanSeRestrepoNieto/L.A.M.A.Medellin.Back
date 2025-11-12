@@ -46,6 +46,21 @@ public class MiembrosController : ControllerBase
     return Ok(apiResponse);
   }
 
+  [HttpGet("GetAll")]
+  public async Task<ActionResult<ApiResponse<List<MiembroDto>>>> GetAllMembers()
+  {
+
+    var resultado = await _miembroService.ObtenerTodosAsync();
+    
+    var apiResponse = ApiResponse<List<MiembroDto>>.SuccessResponse(
+        resultado.Select(MiembroMapping.ToDto).ToList(),
+        "Miembros obtenidos exitosamente"
+    );
+    apiResponse.TraceId = HttpContext.TraceIdentifier;
+
+    return Ok(apiResponse);
+  }
+
   [HttpGet("{id:int}")]
   public async Task<ActionResult<ApiResponse<MiembroDto>>> GetMember(int id)
   {
