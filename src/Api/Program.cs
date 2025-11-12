@@ -5,6 +5,8 @@ using Api.Middleware;
 using Infraestructura.Contexto;
 using Infraestructura.Repositorios;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Identity.Web;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,6 +39,19 @@ builder.Services.AddCors(options =>
         policy.WithOrigins("http://localhost:5173").AllowAnyHeader().AllowAnyMethod();
     });
 });
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+  .AddMicrosoftIdentityWebApi(op =>
+  {
+    builder.Configuration.Bind("AzureAdB2C", op);
+    op.TokenValidationParameters.NameClaimType = "name";
+  },
+  op =>
+  {
+    op.Instance = builder.Configuration.GetValue<string>("AzureAdB2C:Instance") ?? throw new ArgumentNullException("AzureAdB2C:Instance");
+    op.TenantId = builder.Configuration.GetValue<string>("AzureAdB2C:TenantId") ?? throw new ArgumentNullException("AzureAdB2C:TenantId");
+    op.ClientId = builder.Configuration.GetValue<string>("AzureAdB2C:ClientId") ?? throw new ArgumentNullException("AzureAdB2C:ClientId");
+  });
 
 var app = builder.Build();
 

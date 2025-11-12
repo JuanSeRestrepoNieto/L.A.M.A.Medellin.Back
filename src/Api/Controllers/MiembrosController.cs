@@ -4,13 +4,16 @@ using Aplicacion.DTOs;
 using Aplicacion.Excepciones;
 using Aplicacion.Interfaces.Servicios;
 using Dominio.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Identity.Web.Resource;
 
 namespace Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
-public class MiembrosController : ControllerBase
+public class MiembrosController : InternalBaseController
 {
   private readonly IMiembroService _miembroService;
 
@@ -19,6 +22,7 @@ public class MiembrosController : ControllerBase
     _miembroService = miembroService;
   }
 
+  [RequiredScope(API_SCOPE_MIEMBROS_LECTURA)]
   [HttpGet]
   public async Task<ActionResult<ApiResponse<PaginatedResponseDto<MiembroDto>>>> GetMembers([FromQuery] MiembroFiltrosDto? filtros = null)
   {
@@ -46,6 +50,7 @@ public class MiembrosController : ControllerBase
     return Ok(apiResponse);
   }
 
+  [RequiredScope(API_SCOPE_MIEMBROS_TODOS)]
   [HttpGet("GetAll")]
   public async Task<ActionResult<ApiResponse<List<MiembroDto>>>> GetAllMembers()
   {
@@ -61,6 +66,7 @@ public class MiembrosController : ControllerBase
     return Ok(apiResponse);
   }
 
+  [RequiredScope(API_SCOPE_MIEMBROS_LEER_ID)]
   [HttpGet("{id:int}")]
   public async Task<ActionResult<ApiResponse<MiembroDto>>> GetMember(int id)
   {
@@ -79,6 +85,7 @@ public class MiembrosController : ControllerBase
     return Ok(apiResponse);
   }
 
+  [RequiredScope(API_SCOPE_MIEMBROS_CREACION)]
   [HttpPost]
   public async Task<ActionResult<ApiResponse<MiembroDto>>> CreateMember(CreateMiembroDto dto)
   {
@@ -95,6 +102,7 @@ public class MiembrosController : ControllerBase
     return CreatedAtAction(nameof(GetMember), new { id = createdDto.Id }, apiResponse);
   }
 
+  [RequiredScope(API_SCOPE_MIEMBROS_ACTUALIZACION)]
   [HttpPut("{id:int}")]
   public async Task<ActionResult<ApiResponse<object>>> UpdateMember(int id, UpdateMiembroDto dto)
   {
@@ -110,6 +118,7 @@ public class MiembrosController : ControllerBase
     return Ok(apiResponse);
   }
 
+  [RequiredScope(API_SCOPE_MIEMBROS_ELIMINACION)]
   [HttpDelete("{id:int}")]
   public async Task<ActionResult<ApiResponse<object>>> DeleteMember(int id)
   {
